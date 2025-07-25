@@ -8,9 +8,13 @@ use handlers::create::create_data;
 use handlers::delete::delete_data;
 use handlers::read::{read_all_data, read_data};
 use handlers::update::update_data;
+use std::env;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
+    // Load environment variables from .env file (if it exists)
+    dotenv::dotenv().ok();
+
     // Create the global application state
     let state = state::new_state();
 
@@ -29,7 +33,8 @@ async fn main() -> tide::Result<()> {
     app.at("/data/:id").put(update_data); // Update
     app.at("/data/:id").delete(delete_data); // Delete
 
-    let addr = "127.0.0.1:8080";
+    // Get server address from environment variable or use default
+    let addr = env::var("SERVER_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
     println!("CRUD server with JWT authentication and refresh tokens running at: http://{addr}");
     println!("Available users:");
     println!("  - admin/admin123");

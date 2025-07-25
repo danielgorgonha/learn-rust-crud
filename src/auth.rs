@@ -3,12 +3,33 @@ use crate::state::AppState;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use tide::Request;
+use std::env;
 
-// JWT Configuration
-const JWT_SECRET: &[u8] = b"your-secret-key-change-in-production";
-const JWT_ISSUER: &str = "learn-rust-crud";
-const ACCESS_TOKEN_EXPIRATION_HOURS: i64 = 1; // 1 hour for access token
-const REFRESH_TOKEN_EXPIRATION_DAYS: i64 = 30; // 30 days for refresh token
+// JWT Configuration - Get from environment variables with defaults
+fn get_jwt_secret() -> Vec<u8> {
+    env::var("JWT_SECRET")
+        .unwrap_or_else(|_| "your-secret-key-change-in-production".to_string())
+        .into_bytes()
+}
+
+fn get_jwt_issuer() -> String {
+    env::var("JWT_ISSUER")
+        .unwrap_or_else(|_| "learn-rust-crud".to_string())
+}
+
+fn get_access_token_expiration_hours() -> i64 {
+    env::var("ACCESS_TOKEN_EXPIRATION_HOURS")
+        .unwrap_or_else(|_| "1".to_string())
+        .parse()
+        .unwrap_or(1)
+}
+
+fn get_refresh_token_expiration_days() -> i64 {
+    env::var("REFRESH_TOKEN_EXPIRATION_DAYS")
+        .unwrap_or_else(|_| "30".to_string())
+        .parse()
+        .unwrap_or(30)
+}
 
 // Function to authenticate user and generate JWT tokens
 pub async fn login(mut req: Request<AppState>) -> tide::Result {
@@ -26,7 +47,7 @@ pub async fn login(mut req: Request<AppState>) -> tide::Result {
             // Store refresh token
             let refresh_info = RefreshTokenInfo {
                 username: auth_req.username.clone(),
-                expires_at: (Utc::now() + Duration::days(REFRESH_TOKEN_EXPIRATION_DAYS)).timestamp(),
+                expires_at: (Utc::now() + Duration::days(get_refresh_token_expiration_days())).timestamp(),
             };
             app_state.refresh_tokens.insert(refresh_token.clone(), refresh_info);
             
@@ -35,7 +56,7 @@ pub async fn login(mut req: Request<AppState>) -> tide::Result {
                 refresh_token,
                 username: auth_req.username,
                 token_type: "Bearer".to_string(),
-                expires_in: ACCESS_TOKEN_EXPIRATION_HOURS * 3600, // Convert hours to seconds
+                expires_in: get_access_token_expiration_hours() * 3600, // Convert hours to seconds
             };
 
             Ok(tide::Body::from_json(&response)?.into())
@@ -65,7 +86,7 @@ pub async fn refresh(mut req: Request<AppState>) -> tide::Result {
                 refresh_token: refresh_req.refresh_token, // Keep the same refresh token
                 username: refresh_info.username.clone(),
                 token_type: "Bearer".to_string(),
-                expires_in: ACCESS_TOKEN_EXPIRATION_HOURS * 3600,
+                expires_in: get_access_token_expiration_hours() * 3600,
             };
 
             Ok(tide::Body::from_json(&response)?.into())
@@ -124,20 +145,20 @@ pub fn create_data_entry_from_request(req_data: CreateDataRequest, owner: String
 // Generate access JWT token
 fn generate_access_token(username: &str) -> Result<String, tide::Error> {
     let now = Utc::now();
-    let expires_at = now + Duration::hours(ACCESS_TOKEN_EXPIRATION_HOURS);
+    let expires_at = now + Duration::hours(get_access_token_expiration_hours());
     
     let claims = Claims {
         sub: username.to_string(),
         exp: expires_at.timestamp(),
         iat: now.timestamp(),
-        iss: JWT_ISSUER.to_string(),
+        iss: get_jwt_issuer(),
         token_type: "access".to_string(),
     };
 
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET),
+        &EncodingKey::from_secret(get_jwt_secret().as_slice()),
     )
     .map_err(|_| tide::Error::from_str(500, "Failed to generate access token"))
 }
@@ -145,20 +166,20 @@ fn generate_access_token(username: &str) -> Result<String, tide::Error> {
 // Generate refresh JWT token
 fn generate_refresh_token(username: &str) -> Result<String, tide::Error> {
     let now = Utc::now();
-    let expires_at = now + Duration::days(REFRESH_TOKEN_EXPIRATION_DAYS);
+    let expires_at = now + Duration::days(get_refresh_token_expiration_days());
     
     let claims = Claims {
         sub: username.to_string(),
         exp: expires_at.timestamp(),
         iat: now.timestamp(),
-        iss: JWT_ISSUER.to_string(),
+        iss: get_jwt_issuer(),
         token_type: "refresh".to_string(),
     };
 
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET),
+        &EncodingKey::from_secret(get_jwt_secret().as_slice()),
     )
     .map_err(|_| tide::Error::from_str(500, "Failed to generate refresh token"))
 }
@@ -167,7 +188,7 @@ fn generate_refresh_token(username: &str) -> Result<String, tide::Error> {
 fn decode_access_token(token: &str) -> Result<Claims, tide::Error> {
     let token_data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(JWT_SECRET),
+        &DecodingKey::from_secret(get_jwt_secret().as_slice()),
         &Validation::default(),
     )
     .map_err(|_| tide::Error::from_str(401, "Invalid token"))?;

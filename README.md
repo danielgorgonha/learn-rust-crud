@@ -55,11 +55,36 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 git clone https://github.com/danielgorgonha/learn-rust-crud.git
 cd learn-rust-crud
 
+# Configure environment (optional)
+cp env.example .env
+# Edit .env to customize settings
+
 # Run the project
 cargo run
 ```
 
-The server will be available at: `http://127.0.0.1:8080`
+The server will be available at: `http://127.0.0.1:8080` (configurable via `SERVER_ADDR` environment variable)
+
+### Environment Variables
+
+The application supports the following environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_ADDR` | `127.0.0.1:8080` | Server address and port |
+| `JWT_SECRET` | `your-secret-key-change-in-production` | Secret key for JWT signing |
+| `JWT_ISSUER` | `learn-rust-crud` | JWT issuer claim |
+| `ACCESS_TOKEN_EXPIRATION_HOURS` | `1` | Access token expiration in hours |
+| `REFRESH_TOKEN_EXPIRATION_DAYS` | `30` | Refresh token expiration in days |
+
+**Example `.env` file:**
+```bash
+SERVER_ADDR=127.0.0.1:3000
+JWT_SECRET=my-super-secret-key-for-production
+JWT_ISSUER=my-app
+ACCESS_TOKEN_EXPIRATION_HOURS=2
+REFRESH_TOKEN_EXPIRATION_DAYS=7
+```
 
 ## 🔐 Authentication
 
