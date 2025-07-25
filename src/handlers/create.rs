@@ -1,21 +1,28 @@
-use crate::models::DataEntry;
+use crate::auth::{create_data_entry_from_request, get_authenticated_user};
+use crate::models::CreateDataRequest;
 use crate::state::AppState;
 use tide::Request;
 
 pub async fn create_data(mut req: Request<AppState>) -> tide::Result {
-    // Lê o corpo da requisição como JSON
-    let entry: DataEntry = req.body_json().await?;
+    // Check if user is authenticated
+    let username = get_authenticated_user(&req)?;
 
-    // Pega o estado global (HashMap protegido por Mutex)
+    // Read request body as JSON
+    let req_data: CreateDataRequest = req.body_json().await?;
+
+    // Create DataEntry with owner
+    let entry = create_data_entry_from_request(req_data, username);
+
+    // Get global state (HashMap protected by Mutex)
     let state = req.state();
-    let mut map = state.lock().unwrap();
+    let mut app_state = state.lock().unwrap();
 
-    // Gera um novo id simples
-    let new_id = map.len() as u32 + 1;
+    // Generate a simple new id
+    let new_id = app_state.data.len() as u32 + 1;
 
-    // Insere o novo registro
-    map.insert(new_id, entry);
+    // Insert the new record
+    app_state.data.insert(new_id, entry);
 
-    // Retorna o id criado como JSON
+    // Return the created id as JSON
     Ok(tide::Body::from_json(&serde_json::json!({ "id": new_id }))?.into())
 }

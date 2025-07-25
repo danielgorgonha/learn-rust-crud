@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tide](https://img.shields.io/badge/Tide-0.16.0-blue.svg)](https://github.com/http-rs/tide)
 
-A simple REST CRUD API built with Rust and the Tide framework, designed for learning fundamental web development concepts in Rust.
+A simple REST CRUD API built with Rust and the Tide framework, designed for learning fundamental web development concepts in Rust. **Now with JWT authentication and refresh tokens!**
 
 ## 🎯 About the Project
 
@@ -15,16 +15,22 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 - Thread-safe state management
 - JSON serialization/deserialization
 - Modular Rust project structure
+- **JWT authentication and authorization systems**
+- **Refresh token implementation**
+- **Token-based security with expiration**
 
 ## 🚀 Features
 
-- ✅ **CREATE**: Create new records
-- ✅ **READ**: List all records or search by ID
-- ✅ **UPDATE**: Update existing records
-- ✅ **DELETE**: Remove records
+- ✅ **CREATE**: Create new records (owner-only)
+- ✅ **READ**: List all records or search by ID (authenticated users)
+- ✅ **UPDATE**: Update existing records (owner-only)
+- ✅ **DELETE**: Remove records (owner-only)
 - ✅ **Thread-safe**: Safe shared state between multiple requests
 - ✅ **JSON API**: REST interface with JSON
-- ✅ **Tests**: Automated test scripts
+- ✅ **JWT Authentication**: Secure JWT tokens with expiration
+- ✅ **Refresh Tokens**: Automatic token refresh system
+- ✅ **Authorization**: Owner-only access for sensitive operations
+- ✅ **Tests**: Automated test scripts with authentication
 
 ## 🛠️ Technologies Used
 
@@ -32,6 +38,8 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 - **[Tide](https://github.com/http-rs/tide)** - Asynchronous web framework
 - **[Serde](https://serde.rs/)** - Serialization/deserialization
 - **[async-std](https://async.rs/)** - Asynchronous runtime
+- **[jsonwebtoken](https://docs.rs/jsonwebtoken/)** - JWT token generation
+- **[chrono](https://docs.rs/chrono/)** - Date and time handling
 
 ## 📦 Installation
 
@@ -53,7 +61,65 @@ cargo run
 
 The server will be available at: `http://127.0.0.1:8080`
 
+## 🔐 Authentication
+
+### Default Users
+
+The system comes with pre-configured users for testing:
+
+| Username | Password |
+|----------|----------|
+| `admin`  | `admin123` |
+| `user1`  | `password123` |
+| `user2`  | `password456` |
+
+### Authentication Flow
+
+1. **Login** to get access and refresh tokens
+2. **Use access token** in Authorization header for all requests
+3. **Refresh access token** when it expires (using refresh token)
+4. **Logout** to invalidate refresh token
+
+### Token Expiration
+
+- **Access Token**: 1 hour (for security)
+- **Refresh Token**: 30 days (for convenience)
+
 ## 📚 How to Use
+
+### Authentication Endpoints
+
+#### Login
+```bash
+curl -X POST http://127.0.0.1:8080/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "admin", "password": "admin123"}'
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "username": "admin",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+#### Refresh Token
+```bash
+curl -X POST http://127.0.0.1:8080/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d '{"refresh_token": "your-refresh-token-here"}'
+```
+
+#### Logout
+```bash
+curl -X POST http://127.0.0.1:8080/auth/logout \
+  -H 'Content-Type: application/json' \
+  -d '{"refresh_token": "your-refresh-token-here"}'
+```
 
 ### Data Model
 
@@ -66,43 +132,64 @@ The server will be available at: `http://127.0.0.1:8080`
 
 ### API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/data` | Create new record |
-| `GET` | `/data` | List all records |
-| `GET` | `/data/:id` | Get record by ID |
-| `PUT` | `/data/:id` | Update record |
-| `DELETE` | `/data/:id` | Delete record |
+| Method | Endpoint | Description | Auth Required | Owner Only |
+|--------|----------|-------------|---------------|------------|
+| `POST` | `/auth/login` | Login and get tokens | ❌ | ❌ |
+| `POST` | `/auth/refresh` | Refresh access token | ❌ | ❌ |
+| `POST` | `/auth/logout` | Logout and invalidate refresh token | ❌ | ❌ |
+| `POST` | `/data` | Create new record | ✅ | ✅ |
+| `GET` | `/data` | List all records | ✅ | ❌ |
+| `GET` | `/data/:id` | Get record by ID | ✅ | ❌ |
+| `PUT` | `/data/:id` | Update record | ✅ | ✅ |
+| `DELETE` | `/data/:id` | Delete record | ✅ | ✅ |
 
 ### Usage Examples
 
-#### 1. Create a record
+#### 1. Login and get tokens
+```bash
+# Login
+resp=$(curl -s -X POST http://127.0.0.1:8080/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "admin", "password": "admin123"}')
+
+# Extract tokens
+access_token=$(echo $resp | grep -oE '"access_token":"[^"]*"' | cut -d'"' -f4)
+refresh_token=$(echo $resp | grep -oE '"refresh_token":"[^"]*"' | cut -d'"' -f4)
+```
+
+#### 2. Create a record (requires authentication)
 ```bash
 curl -X POST http://127.0.0.1:8080/data \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $access_token" \
   -d '{"data1": ["first", "second"], "data2": [1,2,3]}'
 ```
 
-#### 2. List all records
+#### 3. Refresh access token when expired
 ```bash
-curl http://127.0.0.1:8080/data
+curl -X POST http://127.0.0.1:8080/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d "{\"refresh_token\": \"$refresh_token\"}"
 ```
 
-#### 3. Get specific record
+#### 4. List all records (requires authentication)
 ```bash
-curl http://127.0.0.1:8080/data/1
+curl -X GET http://127.0.0.1:8080/data \
+  -H "Authorization: Bearer $access_token"
 ```
 
-#### 4. Update record
+#### 5. Update record (requires authentication + ownership)
 ```bash
 curl -X PUT http://127.0.0.1:8080/data/1 \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $access_token" \
   -d '{"data1": ["updated"], "data2": [10,20,30]}'
 ```
 
-#### 5. Delete record
+#### 6. Delete record (requires authentication + ownership)
 ```bash
-curl -X DELETE http://127.0.0.1:8080/data/1
+curl -X DELETE http://127.0.0.1:8080/data/1 \
+  -H "Authorization: Bearer $access_token"
 ```
 
 ## 🧪 Testing
@@ -110,8 +197,17 @@ curl -X DELETE http://127.0.0.1:8080/data/1
 The project includes automated test scripts in the `test/` folder:
 
 ```bash
-# Run tests in sequence
+# Make scripts executable
 chmod +x test/*.sh
+
+# Test refresh token system
+./test/test_refresh_token.sh
+
+# Run complete test suite
+./test/run_all_tests.sh
+
+# Or run individual tests
+./test/0_login.sh
 ./test/1_create.sh
 ./test/2_read_all.sh
 ./test/3_read_one.sh
@@ -126,6 +222,7 @@ src/
 ├── main.rs          # Entry point and server configuration
 ├── models.rs        # Data model definitions
 ├── state.rs         # Global state management
+├── auth.rs          # Authentication and authorization logic
 └── handlers/        # CRUD operation handlers
     ├── create.rs    # CREATE operation
     ├── read.rs      # READ operations
@@ -133,11 +230,14 @@ src/
     └── delete.rs    # DELETE operation
 
 test/                 # Test scripts
-├── 1_create.sh
-├── 2_read_all.sh
-├── 3_read_one.sh
-├── 4_update.sh
-└── 5_delete.sh
+├── 0_login.sh       # Authentication test
+├── 1_create.sh      # Create test
+├── 2_read_all.sh    # Read all test
+├── 3_read_one.sh    # Read one test
+├── 4_update.sh      # Update test
+├── 5_delete.sh      # Delete test
+├── test_refresh_token.sh # Refresh token tests
+└── run_all_tests.sh # Complete test suite
 ```
 
 ## 🔧 Development
@@ -160,6 +260,24 @@ cargo test
 cargo check
 cargo clippy
 ```
+
+## 🔒 Security Features
+
+- **JWT authentication**: Secure JWT tokens with expiration
+- **Refresh tokens**: Long-lived tokens for automatic renewal
+- **Access tokens**: Short-lived tokens for security
+- **Owner-only operations**: Users can only modify their own data
+- **Token invalidation**: Refresh tokens removed on logout
+- **Authorization headers**: Bearer token authentication
+- **Error handling**: Proper HTTP status codes for auth failures
+
+## 🔄 Refresh Token Flow
+
+1. **Login** → Get access token (1h) + refresh token (30d)
+2. **Use access token** → Make API requests
+3. **Access token expires** → Use refresh token to get new access token
+4. **Refresh token expires** → Login again
+5. **Logout** → Invalidate refresh token
 
 ## 📝 License
 
@@ -187,6 +305,8 @@ Contributions are welcome! Feel free to:
 - [Tide Documentation](https://docs.rs/tide)
 - [Serde Documentation](https://serde.rs/)
 - [async-std Documentation](https://docs.rs/async-std)
+- [jsonwebtoken Documentation](https://docs.rs/jsonwebtoken/)
+- [Chrono Documentation](https://docs.rs/chrono/)
 
 ## ⭐ If this project helped you
 
