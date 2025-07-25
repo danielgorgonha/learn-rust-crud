@@ -115,7 +115,14 @@ pub async fn logout(mut req: Request<AppState>) -> tide::Result {
 // Helper function to check if user is authenticated
 pub fn get_authenticated_user(req: &Request<AppState>) -> Result<String, tide::Error> {
     if let Some(auth_header) = req.header("Authorization") {
-        let token = auth_header.to_string().replace("Bearer ", "");
+        // Handle the header properly - it might be an array or single value
+        let header_str = auth_header.to_string();
+        let token = if header_str.starts_with('[') && header_str.ends_with(']') {
+            // Remove brackets and quotes if present
+            header_str[1..header_str.len()-1].replace("\"", "").replace("Bearer ", "")
+        } else {
+            header_str.replace("Bearer ", "")
+        };
         
         // Decode and validate access token
         match decode_access_token(&token) {

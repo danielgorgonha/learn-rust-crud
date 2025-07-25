@@ -12,8 +12,8 @@ login_response=$(curl -s -X POST http://127.0.0.1:8080/auth/login \
 
 echo "Login response: $login_response"
 
-# Extract JWT token
-jwt_token=$(echo $login_response | grep -oE '"token":"[^"]*"' | cut -d'"' -f4)
+# Extract JWT token (access_token)
+jwt_token=$(echo $login_response | grep -oE '"access_token":"[^"]*"' | cut -d'"' -f4)
 echo "JWT Token: $jwt_token"
 echo
 

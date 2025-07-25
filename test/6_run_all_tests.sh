@@ -1,53 +1,65 @@
 #!/bin/bash
-# Script to run all tests in sequence
+# Script to run all tests in sequence with proper token sharing
 
 echo "=== COMPLETE CRUD TEST WITH JWT AUTHENTICATION ==="
 echo
 
-# JWT Tests
-echo "=== JWT AUTHENTICATION TESTS ==="
-source ./test/test_jwt.sh
+# Clean up any existing temporary files
+echo "Cleaning up temporary files..."
+./test/cleanup.sh
 echo
 
-# 0. Login
+# JWT Tests
+echo "=== JWT AUTHENTICATION TESTS ==="
+./test/8_test_jwt.sh
+echo
+
+# CRUD Tests
 echo "=== CRUD OPERATION TESTS ==="
+
+# 0. Login
 echo "1. Logging in..."
-source ./test/0_login.sh
+./test/0_login.sh
 echo
 
 # 1. Create
 echo "2. Creating record..."
-source ./test/1_create.sh
+./test/1_create.sh
 echo
 
 # 2. Read All
 echo "3. Listing all records..."
-source ./test/2_read_all.sh
+./test/2_read_all.sh
 echo
 
 # 3. Read One
 echo "4. Reading specific record..."
-source ./test/3_read_one.sh
+./test/3_read_one.sh
 echo
 
 # 4. Update
 echo "5. Updating record..."
-source ./test/4_update.sh
+./test/4_update.sh
 echo
 
 # 5. Read One (after update)
 echo "6. Reading record after update..."
-source ./test/3_read_one.sh
+./test/3_read_one.sh
 echo
 
 # 6. Delete
 echo "7. Deleting record..."
-source ./test/5_delete.sh
+./test/5_delete.sh
 echo
 
 # 7. Read All (after delete)
 echo "8. Listing records after deletion..."
-source ./test/2_read_all.sh
+./test/2_read_all.sh
+echo
+
+# Clean up
+echo "=== CLEANUP ==="
+./test/cleanup.sh
 echo
 
 echo "=== ALL TESTS COMPLETED ===" 
