@@ -263,6 +263,12 @@ test/                 # Test scripts
 ├── 5_delete.sh      # Delete test
 ├── test_refresh_token.sh # Refresh token tests
 └── run_all_tests.sh # Complete test suite
+
+postman/              # Postman collection and environments
+├── postman_collection.json             # Main collection with all requests
+├── postman_environment.json            # Development environment (localhost)
+├── postman_environment_production.json # Production environment (Railway)
+└── POSTMAN_SETUP.md                    # Complete setup guide
 ```
 
 ## 🔧 Development
@@ -271,6 +277,56 @@ test/                 # Test scripts
 
 ```bash
 cargo run
+```
+
+## 🧪 Testing
+
+### Using Postman
+
+This project includes a complete Postman collection for testing the API. The collection is located in the `postman/` folder and includes:
+
+#### 📁 Postman Files
+- `postman_collection.json` - Complete collection with all API endpoints
+- `postman_environment.json` - Development environment (localhost:8080)
+- `postman_environment_production.json` - Production environment (Railway)
+- `POSTMAN_SETUP.md` - Detailed setup and usage guide
+
+#### 🌍 Available Environments
+- **Development**: `http://127.0.0.1:8080` - For local testing
+- **Production**: `https://learn-rust-crud-production.up.railway.app` - For production testing
+
+#### 🚀 Quick Setup
+1. Import the collection and environment files into Postman
+2. Select the desired environment (development or production)
+3. Start with the "Login" request to get authentication tokens
+4. Test all CRUD operations with automatic token management
+
+#### 📋 Test Flow
+1. **Login** → Get access and refresh tokens
+2. **Create Data** → Create a new record
+3. **Read All Data** → List all records
+4. **Read Data by ID** → Get specific record
+5. **Update Data** → Modify existing record
+6. **Delete Data** → Remove record
+7. **Logout** → Invalidate tokens
+
+For detailed instructions, see `postman/POSTMAN_SETUP.md`.
+
+### Using Shell Scripts
+
+The project includes shell scripts in the `test/` folder for automated testing:
+
+```bash
+# Run all tests
+./test/run_all_tests.sh
+
+# Run individual tests
+./test/0_login.sh      # Test authentication
+./test/1_create.sh     # Test create operation
+./test/2_read_all.sh   # Test read all operation
+./test/3_read_one.sh   # Test read one operation
+./test/4_update.sh     # Test update operation
+./test/5_delete.sh     # Test delete operation
 ```
 
 ### Run tests
