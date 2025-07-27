@@ -57,6 +57,16 @@ echo "8. Listing records after deletion..."
 ./test/2_read_all.sh
 echo
 
+# WASM Execution Tests
+echo "=== WASM EXECUTION TESTS ==="
+./test/10_test_wasm_execute.sh
+echo
+
+# Advanced WASM Tests
+echo "=== ADVANCED WASM TESTS ==="
+./test/11_test_advanced_wasm.sh
+echo
+
 # Clean up
 echo "=== CLEANUP ==="
 ./test/cleanup.sh

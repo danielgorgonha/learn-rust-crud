@@ -21,5 +21,5 @@ fi
 resp=$(curl -s -w "\nStatus: %{http_code}\n" -X PUT http://127.0.0.1:8080/data/$id \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{"data1": ["atualizado", "novo"], "data2": [10,20,30]}' )
+  -d '{"func_names": ["add", "mul", "sub", "div", "rem"], "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11]}' )
 echo "$resp" 

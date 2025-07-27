@@ -13,7 +13,7 @@ echo "Creating a record (requires authentication)..."
 resp=$(curl -s -X POST http://127.0.0.1:8080/data \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -d '{"data1": ["primeiro", "segundo"], "data2": [1,2,3]}' )
+  -d '{"func_names": ["add", "mul", "sub", "div"], "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11]}' )
 echo "Response: $resp"
 id=$(echo $resp | grep -oE '"id": *[0-9]+' | grep -oE '[0-9]+')
 echo "Created ID: $id"
