@@ -11,7 +11,7 @@
 /// 
 /// # Returns
 /// The sum of x and y
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn add(x: i32, y: i32) -> i32 {
     x + y
 }
@@ -24,7 +24,7 @@ pub extern "C" fn add(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The product of x and y
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn mul(x: i32, y: i32) -> i32 {
     x * y
 }
@@ -37,7 +37,7 @@ pub extern "C" fn mul(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The difference (x - y), or 0 if x < y
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sub(x: i32, y: i32) -> i32 {
     if x < y {
         return 0;
@@ -53,7 +53,7 @@ pub extern "C" fn sub(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The quotient (x / y), or 0 if y == 0
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn div(x: i32, y: i32) -> i32 {
     if y == 0 {
         return 0;
@@ -69,7 +69,7 @@ pub extern "C" fn div(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The remainder (x % y), or 0 if y == 0
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rem(x: i32, y: i32) -> i32 {
     if y == 0 {
         return 0;
@@ -84,7 +84,7 @@ pub extern "C" fn rem(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The absolute value of x
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn abs(x: i32) -> i32 {
     if x < 0 {
         -x
@@ -101,7 +101,7 @@ pub extern "C" fn abs(x: i32) -> i32 {
 /// 
 /// # Returns
 /// The larger of x and y
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn max(x: i32, y: i32) -> i32 {
     if x > y {
         x
@@ -118,7 +118,7 @@ pub extern "C" fn max(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// The smaller of x and y
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn min(x: i32, y: i32) -> i32 {
     if x < y {
         x
@@ -135,7 +135,7 @@ pub extern "C" fn min(x: i32, y: i32) -> i32 {
 /// 
 /// # Returns
 /// x^y, or 0 if y < 0 (to avoid floating point)
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn pow(x: i32, y: i32) -> i32 {
     if y < 0 {
         return 0;

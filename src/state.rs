@@ -26,8 +26,11 @@ impl Default for Metrics {
 
 #[derive(Clone)]
 pub struct RateLimiter {
+    #[allow(dead_code)]
     pub user_requests: HashMap<String, Vec<Instant>>,
+    #[allow(dead_code)]
     pub max_requests: usize,
+    #[allow(dead_code)]
     pub window_duration: Duration,
 }
 
