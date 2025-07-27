@@ -1,9 +1,10 @@
 use crate::auth::get_authenticated_user;
 use crate::state::AppState;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tide::{Request, Response, StatusCode};
 use wasmi::{Engine, Instance, Module, Store, TypedFunc};
+use tracing::info;
+use std::time::Instant;
 
 #[derive(Deserialize)]
 struct ExecRequest {
@@ -23,12 +24,20 @@ struct ExecResponse {
 }
 
 pub async fn execute_fn(mut req: Request<AppState>) -> tide::Result {
+    let start_time = Instant::now();
+    
     // Verifica autenticação JWT
     let username = get_authenticated_user(&req)?;
     
+    // Log execution start
+    info!(
+        user = %username,
+        "WASM execution started"
+    );
+    
     // Lê e valida o JSON do body
     let exec_req: ExecRequest = req.body_json().await.map_err(|_| {
-        tide::Error::from_str(400, "Invalid JSON: esperado { fn: string, arg: [i32; 2] }")
+        tide::Error::from_str(400, "Invalid JSON: expected { fn: string, arg: [i32; 2] }")
     })?;
 
     // Valida se a função é uma das permitidas
@@ -36,9 +45,12 @@ pub async fn execute_fn(mut req: Request<AppState>) -> tide::Result {
     if !allowed_functions.contains(&exec_req.func.as_str()) {
         return Err(tide::Error::from_str(
             400, 
-            format!("Função '{}' não permitida. Funções disponíveis: {:?}", exec_req.func, allowed_functions)
+            format!("Function '{}' not allowed. Available functions: {:?}", exec_req.func, allowed_functions)
         ));
     }
+
+    // Validate arguments
+    validate_arguments(&exec_req.arg, &exec_req.func)?;
 
     // Busca o registro no estado global
     let id: u32 = match req.param("id") {
@@ -101,6 +113,17 @@ pub async fn execute_fn(mut req: Request<AppState>) -> tide::Result {
             tide::Error::from_str(StatusCode::InternalServerError, format!("WASM execution error: {e}"))
         })?;
 
+    let execution_time = start_time.elapsed();
+    
+    // Log successful execution
+    info!(
+        user = %username,
+        function = %exec_req.func,
+        result = %result,
+        execution_time_ms = execution_time.as_millis(),
+        "WASM execution completed successfully"
+    );
+
     let response = ExecResponse {
         success: true,
         result: Some(result),
@@ -114,4 +137,37 @@ pub async fn execute_fn(mut req: Request<AppState>) -> tide::Result {
         .body(serde_json::to_string(&response)?)
         .content_type(tide::http::mime::JSON)
         .build())
+}
+
+// Validation functions
+fn validate_arguments(args: &[i32; 2], func: &str) -> tide::Result<()> {
+    const MAX_ARGUMENT: i32 = 1_000_000;
+    const MIN_ARGUMENT: i32 = -1_000_000;
+
+    // Check argument ranges
+    for (i, &arg) in args.iter().enumerate() {
+        if arg < MIN_ARGUMENT || arg > MAX_ARGUMENT {
+            return Err(tide::Error::from_str(
+                400,
+                format!("Argument {} ({}) out of range [{}, {}]", i, arg, MIN_ARGUMENT, MAX_ARGUMENT)
+            ));
+        }
+    }
+
+    // Function-specific validations
+    match func {
+        "div" | "rem" => {
+            if args[1] == 0 {
+                return Err(tide::Error::from_str(400, "Division by zero"));
+            }
+        }
+        "pow" => {
+            if args[1] < 0 || args[1] > 10 {
+                return Err(tide::Error::from_str(400, "Power exponent must be 0-10"));
+            }
+        }
+        _ => {}
+    }
+
+    Ok(())
 }

@@ -13,6 +13,9 @@ use std::env;
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
+    // Initialize tracing for logging
+    tracing_subscriber::fmt::init();
+    
     // Load environment variables from .env file (if it exists)
     dotenv::dotenv().ok();
 
