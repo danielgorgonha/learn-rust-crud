@@ -25,11 +25,13 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 - ✅ **READ**: List all records or search by ID (authenticated users)
 - ✅ **UPDATE**: Update existing records (owner-only)
 - ✅ **DELETE**: Remove records (owner-only)
+- ✅ **EXECUTE**: Execute WebAssembly functions (owner-only)
 - ✅ **Thread-safe**: Safe shared state between multiple requests
 - ✅ **JSON API**: REST interface with JSON
 - ✅ **JWT Authentication**: Secure JWT tokens with expiration
 - ✅ **Refresh Tokens**: Automatic token refresh system
 - ✅ **Authorization**: Owner-only access for sensitive operations
+- ✅ **WebAssembly Support**: Execute WASM modules with security
 - ✅ **Tests**: Automated test scripts with authentication
 
 ## 🛠️ Technologies Used
@@ -40,6 +42,7 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 - **[async-std](https://async.rs/)** - Asynchronous runtime
 - **[jsonwebtoken](https://docs.rs/jsonwebtoken/)** - JWT token generation
 - **[chrono](https://docs.rs/chrono/)** - Date and time handling
+- **[wasmi](https://docs.rs/wasmi/)** - WebAssembly execution
 
 ## 📦 Installation
 
@@ -148,12 +151,19 @@ curl -X POST http://127.0.0.1:8080/auth/logout \
 
 ### Data Model
 
+Each record contains a WebAssembly module with the following structure:
+
 ```json
 {
-  "data1": ["text1", "text2"],
-  "data2": [1, 2, 3]
+  "func_names": ["add", "mul", "sub", "div"],
+  "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11],
+  "owner": "admin"
 }
 ```
+
+- **func_names**: Array of function names available in the WASM module
+- **bytecode**: Array of bytes representing the compiled WebAssembly code
+- **owner**: Username of the record owner (automatically set from JWT token)
 
 ### API Endpoints
 
@@ -167,6 +177,7 @@ curl -X POST http://127.0.0.1:8080/auth/logout \
 | `GET` | `/data/:id` | Get record by ID | ✅ | ❌ |
 | `PUT` | `/data/:id` | Update record | ✅ | ✅ |
 | `DELETE` | `/data/:id` | Delete record | ✅ | ✅ |
+| `POST` | `/execute/:id` | Execute WASM function | ✅ | ✅ |
 
 ### Usage Examples
 
@@ -187,7 +198,7 @@ refresh_token=$(echo $resp | grep -oE '"refresh_token":"[^"]*"' | cut -d'"' -f4)
 curl -X POST http://127.0.0.1:8080/data \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $access_token" \
-  -d '{"data1": ["first", "second"], "data2": [1,2,3]}'
+  -d '{"func_names": ["add", "mul", "sub", "div"], "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11]}'
 ```
 
 #### 3. Refresh access token when expired
@@ -208,13 +219,33 @@ curl -X GET http://127.0.0.1:8080/data \
 curl -X PUT http://127.0.0.1:8080/data/1 \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $access_token" \
-  -d '{"data1": ["updated"], "data2": [10,20,30]}'
+  -d '{"func_names": ["add", "mul", "sub", "div", "rem"], "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11]}'
 ```
 
 #### 6. Delete record (requires authentication + ownership)
 ```bash
 curl -X DELETE http://127.0.0.1:8080/data/1 \
   -H "Authorization: Bearer $access_token"
+```
+
+#### 7. Execute WASM function (requires authentication + ownership)
+```bash
+curl -X POST http://127.0.0.1:8080/execute/1 \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $access_token" \
+  -d '{"fn": "add", "arg": [10, 20]}'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": 30,
+  "error": null,
+  "function": "add",
+  "operands": [10, 20],
+  "owner": "admin"
+}
 ```
 
 ## 🧪 Testing
@@ -227,6 +258,12 @@ chmod +x test/*.sh
 
 # Test refresh token system
 ./test/test_refresh_token.sh
+
+# Test WASM execution
+./test/10_test_wasm_execute.sh
+
+# Test advanced WASM functions
+./test/11_test_advanced_wasm.sh
 
 # Run complete test suite
 ./test/run_all_tests.sh
@@ -359,6 +396,52 @@ cargo clippy
 3. **Access token expires** → Use refresh token to get new access token
 4. **Refresh token expires** → Login again
 5. **Logout** → Invalidate refresh token
+
+## ⚡ WebAssembly Integration
+
+### Building WASM Modules
+
+The project includes a math library that can be compiled to WebAssembly:
+
+```bash
+# Navigate to the math directory
+cd math
+
+# Build the WASM module
+./build.sh
+
+# The script will:
+# 1. Compile the Rust code to WebAssembly
+# 2. Convert the WASM to byte array
+# 3. Save the bytes to BYTES_RESULT.txt
+```
+
+### Available Functions
+
+The math library provides these functions:
+- `add(x: i32, y: i32) -> i32` - Addition
+- `mul(x: i32, y: i32) -> i32` - Multiplication  
+- `sub(x: i32, y: i32) -> i32` - Subtraction (returns 0 if x < y)
+- `div(x: i32, y: i32) -> i32` - Division (returns 0 if y == 0)
+- `rem(x: i32, y: i32) -> i32` - Remainder (returns 0 if y == 0)
+- `abs(x: i32) -> i32` - Absolute value
+- `max(x: i32, y: i32) -> i32` - Maximum of two values
+- `min(x: i32, y: i32) -> i32` - Minimum of two values
+- `pow(x: i32, y: i32) -> i32` - Power (x^y, returns 0 if y < 0)
+
+### Using WASM in Records
+
+1. **Build the WASM module** using the build script
+2. **Copy the bytes** from `BYTES_RESULT.txt`
+3. **Create a record** with the WASM bytes and function names
+4. **Execute functions** using the `/execute/:id` endpoint
+
+### Security Features
+
+- **Owner-only execution**: Users can only execute their own WASM modules
+- **Function validation**: Only predefined functions are allowed
+- **JWT authentication**: All executions require valid authentication
+- **Input validation**: Arguments are validated before execution
 
 ## 📝 License
 
