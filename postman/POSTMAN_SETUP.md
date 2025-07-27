@@ -1,139 +1,177 @@
-# Configuração do Postman para Learn Rust CRUD API
+# Postman Setup for Learn Rust CRUD API
 
-Este guia explica como configurar o Postman para testar a API CRUD em Rust.
+This guide explains how to configure Postman to test the Rust CRUD API with WebAssembly support.
 
-## Arquivos Fornecidos
+## Provided Files
 
-1. `postman_collection.json` - Coleção com todas as requisições
-2. `postman_environment.json` - Ambiente de desenvolvimento local
-3. `postman_environment_production.json` - Ambiente de produção (Railway)
+1. `postman_collection.json` - Collection with all requests (including WebAssembly)
+2. `postman_environment.json` - Local development environment
+3. `postman_environment_production.json` - Production environment (Railway)
 
-## Como Importar
+## How to Import
 
-### 1. Importar a Coleção
-1. Abra o Postman
-2. Clique em "Import" (botão no canto superior esquerdo)
-3. Arraste o arquivo `postman_collection.json` ou clique em "Upload Files"
-4. Selecione o arquivo e clique em "Import"
+### 1. Import the Collection
+1. Open Postman
+2. Click "Import" (button in the upper left corner)
+3. Drag the `postman_collection.json` file or click "Upload Files"
+4. Select the file and click "Import"
 
-### 2. Importar os Ambientes
-1. Clique em "Import" novamente
-2. Arraste os arquivos `postman_environment.json` e `postman_environment_production.json` ou clique em "Upload Files"
-3. Selecione os arquivos e clique em "Import"
+### 2. Import the Environments
+1. Click "Import" again
+2. Drag the `postman_environment.json` and `postman_environment_production.json` files or click "Upload Files"
+3. Select the files and click "Import"
 
-### 3. Selecionar o Ambiente
-1. No canto superior direito do Postman, clique no dropdown de ambiente
-2. Selecione:
-   - **"Learn Rust CRUD Development Environment"** para desenvolvimento local
-   - **"Learn Rust CRUD Production Environment"** para produção
+### 3. Select the Environment
+1. In the upper right corner of Postman, click the environment dropdown
+2. Select:
+   - **"Learn Rust CRUD Development Environment"** for local development
+   - **"Learn Rust CRUD Production Environment"** for production
 
-## Estrutura da Coleção
+## Collection Structure
 
 ### Authentication
-- **Login**: POST `/auth/login` - Faz login e retorna tokens
-- **Refresh Token**: POST `/auth/refresh` - Renova o access token
-- **Logout**: POST `/auth/logout` - Faz logout
+- **Login**: POST `/auth/login` - Logs in and returns tokens
+- **Refresh Token**: POST `/auth/refresh` - Renews access token
+- **Logout**: POST `/auth/logout` - Logs out
 
 ### CRUD Operations
-- **Create Data**: POST `/data` - Cria novo registro
-- **Read All Data**: GET `/data` - Lista todos os registros
-- **Read Data by ID**: GET `/data/:id` - Busca registro específico
-- **Update Data**: PUT `/data/:id` - Atualiza registro
-- **Delete Data**: DELETE `/data/:id` - Remove registro
+- **Create Data**: POST `/data` - Creates new record with WebAssembly module
+- **Read All Data**: GET `/data` - Lists all records
+- **Read Data by ID**: GET `/data/:id` - Searches for specific record
+- **Update Data**: PUT `/data/:id` - Updates record
+- **Delete Data**: DELETE `/data/:id` - Removes record
 
-## Como Usar
+### WebAssembly Operations
+- **Execute WASM Function**: POST `/execute/:id` - Executes WebAssembly function
 
-### 1. Iniciar o Servidor (Desenvolvimento Local)
+> **Note**: The WebAssembly endpoint requires JWT authentication and only the module owner can execute their functions.
+> 
+> **Important**: All records now contain WebAssembly modules (func_names and bytecode).
+
+## How to Use
+
+### 1. Start the Server (Local Development)
 ```bash
 cargo run
 ```
 
-**Para Produção:**
-A API já está disponível em: https://learn-rust-crud-production.up.railway.app
+**For Production:**
+The API is already available at: https://learn-rust-crud-production.up.railway.app
 
-### 2. Fazer Login
-1. Execute a requisição "Login" na pasta "Authentication"
-2. Use um dos usuários disponíveis:
+### 1.1. Prepare WebAssembly (Optional)
+```bash
+cd math
+./build.sh
+```
+This generates the `BYTES_RESULT.txt` file with WASM bytes for testing.
+
+### 2. Login
+1. Execute the "Login" request in the "Authentication" folder
+2. Use one of the available users:
    - `admin/admin123`
    - `user1/password123`
    - `user2/password456`
-3. O access_token e refresh_token serão salvos automaticamente nas variáveis
+3. The access_token and refresh_token will be automatically saved in the variables
 
-### 3. Testar Operações CRUD
-1. **Criar dados**: Execute "Create Data" com um JSON como:
+### 3. Test CRUD Operations
+1. **Create data**: Execute "Create Data" with a JSON like:
    ```json
    {
-       "data1": ["texto1", "texto2", "texto3"],
-       "data2": [1, 2, 3, 4, 5]
+       "func_names": ["add", "mul", "sub", "div"],
+       "bytecode": [0,97,115,109,1,0,0,0,1,6,1,96,2,127,127,1,127,3,2,1,0,7,7,1,3,97,100,100,0,0,10,9,1,7,0,32,0,32,1,106,11]
    }
    ```
 
-2. **Listar dados**: Execute "Read All Data" para ver todos os registros
+2. **List data**: Execute "Read All Data" to see all records
 
-3. **Buscar por ID**: Copie um ID da resposta anterior e atualize a variável `data_id` no ambiente
+3. **Search by ID**: Copy an ID from the previous response and update the `data_id` variable in the environment
 
-4. **Atualizar dados**: Execute "Update Data" com novos dados
+4. **Update data**: Execute "Update Data" with new data
 
-5. **Deletar dados**: Execute "Delete Data" para remover um registro
+5. **Delete data**: Execute "Delete Data" to remove a record
 
-## Variáveis do Ambiente
+### 4. Execute WebAssembly Functions
+1. **Execute WASM function**: Execute "Execute WASM Function" with:
+   ```json
+   {
+       "fn": "add",
+       "arg": [10, 20]
+   }
+   ```
 
-### Desenvolvimento Local
+2. **Test other functions**: Try with `mul`, `sub`, `div`, `rem`, `abs`, `max`, `min`, `pow`
+
+## Environment Variables
+
+### Local Development
 - `base_url`: http://127.0.0.1:8080
-- `access_token`: Token de acesso JWT (preenchido automaticamente após login)
-- `refresh_token`: Token de renovação (preenchido automaticamente após login)
-- `data_id`: ID do registro para operações específicas
+- `access_token`: JWT access token (automatically filled after login)
+- `refresh_token`: Refresh token (automatically filled after login)
+- `data_id`: Record ID for specific operations
 
-### Produção
+### Production
 - `base_url`: https://learn-rust-crud-production.up.railway.app
-- `access_token`: Token de acesso JWT (preenchido automaticamente após login)
-- `refresh_token`: Token de renovação (preenchido automaticamente após login)
-- `data_id`: ID do registro para operações específicas
+- `access_token`: JWT access token (automatically filled after login)
+- `refresh_token`: Refresh token (automatically filled after login)
+- `data_id`: Record ID for specific operations
 
-## Scripts Automáticos
+## Automatic Scripts
 
-A coleção inclui scripts que:
-- Capturam automaticamente os tokens após login
-- Salvam os tokens nas variáveis do ambiente
-- Permitem usar os tokens em requisições subsequentes
+The collection includes scripts that:
+- Automatically capture tokens after login
+- Save tokens in environment variables
+- Allow using tokens in subsequent requests
 
-## Exemplos de Uso
+## Usage Examples
 
-### Fluxo Completo de Teste
+### Complete Test Flow
 
-1. **Login** → Recebe tokens
-2. **Create Data** → Cria um registro
-3. **Read All Data** → Lista todos os registros
-4. **Read Data by ID** → Busca o registro criado (copie o ID da resposta anterior)
-5. **Update Data** → Atualiza o registro
-6. **Delete Data** → Remove o registro
-7. **Logout** → Invalida os tokens
+1. **Login** → Receive tokens
+2. **Create Data** → Create a record with WebAssembly module
+3. **Read All Data** → List all records
+4. **Read Data by ID** → Search for the created record (copy the ID from the previous response)
+5. **Update Data** → Update the record (can modify func_names or bytecode)
+6. **Delete Data** → Remove the record
+7. **Logout** → Invalidate tokens
 
-### Renovação de Token
+### WebAssembly Test Flow
 
-Se o access_token expirar:
-1. Execute "Refresh Token" usando o refresh_token salvo
-2. O novo access_token será salvo automaticamente
-3. Continue testando as operações CRUD
+1. **Login** → Receive tokens
+2. **Create Data** → Create record with WebAssembly module (using func_names and bytecode)
+3. **Execute WASM Function** → Test function execution (add, mul, sub, div, etc.)
+4. **Test different functions** → Try all available operations
+5. **Logout** → Invalidate tokens
+
+### Token Renewal
+
+If the access_token expires:
+1. Execute "Refresh Token" using the saved refresh_token
+2. The new access_token will be automatically saved
+3. Continue testing CRUD operations
 
 ## Troubleshooting
 
-### Erro 401 Unauthorized
-- Verifique se o access_token está válido
-- Execute "Refresh Token" se necessário
-- Verifique se o token está sendo enviado no header Authorization
+### Error 401 Unauthorized
+- Check if the access_token is valid
+- Execute "Refresh Token" if necessary
+- Check if the token is being sent in the Authorization header
 
-### Erro 404 Not Found
-- Verifique se o servidor está rodando em http://127.0.0.1:8080
-- Verifique se a URL está correta
+### Error 404 Not Found
+- Check if the server is running at http://127.0.0.1:8080
+- Check if the URL is correct
 
-### Erro 400 Bad Request
-- Verifique o formato do JSON enviado
-- Verifique se todos os campos obrigatórios estão presentes
+### Error 400 Bad Request
+- Check the JSON format being sent
+- Check if all required fields are present
+- For WASM: Check if the function is in the `func_names` list and if the bytecode is valid
 
-## Configuração do Servidor
+### Error 403 Forbidden (WASM)
+- Check if you are the owner of the WASM module
+- Only the record creator can execute their WASM functions
 
-Certifique-se de que o arquivo `.env` está configurado corretamente:
+## Server Configuration
+
+Make sure the `.env` file is configured correctly:
 
 ```env
 SERVER_ADDR=127.0.0.1:8080
@@ -143,10 +181,85 @@ ACCESS_TOKEN_EXPIRATION_HOURS=1
 REFRESH_TOKEN_EXPIRATION_DAYS=30
 ```
 
-## Usuários de Teste Disponíveis
+## Available Test Users
 
-- **admin/admin123** - Usuário administrador
-- **user1/password123** - Usuário comum 1
-- **user2/password456** - Usuário comum 2
+- **admin/admin123** - Administrator user
+- **user1/password123** - Regular user 1
+- **user2/password456** - Regular user 2
 
-Cada usuário tem acesso apenas aos seus próprios dados. 
+Each user has access only to their own data.
+
+## Data Structure
+
+### DataEntry (Record)
+```json
+{
+  "func_names": ["add", "mul", "sub", "div"],
+  "bytecode": [0,97,115,109,1,0,0,0,...],
+  "owner": "admin"
+}
+```
+
+- **func_names**: List of function names available in the WASM module
+- **bytecode**: Array of bytes of the compiled WebAssembly code
+- **owner**: Name of the record owner
+
+### Creation Response Example
+```json
+{
+  "id": 1,
+  "func_names": ["add", "mul", "sub", "div"],
+  "bytecode": [0,97,115,109,1,0,0,0,...],
+  "owner": "admin"
+}
+```
+
+## Available WebAssembly Functions
+
+The project includes a math library with the following functions:
+
+| Function | Description | Example |
+|----------|-------------|---------|
+| `add(x, y)` | Addition | `add(10, 20) = 30` |
+| `mul(x, y)` | Multiplication | `mul(6, 7) = 42` |
+| `sub(x, y)` | Subtraction | `sub(20, 8) = 12` |
+| `div(x, y)` | Division | `div(100, 5) = 20` |
+| `rem(x, y)` | Remainder | `rem(17, 5) = 2` |
+| `abs(x)` | Absolute value | `abs(-15) = 15` |
+| `max(x, y)` | Maximum | `max(10, 25) = 25` |
+| `min(x, y)` | Minimum | `min(10, 25) = 10` |
+| `pow(x, y)` | Power | `pow(2, 3) = 8` |
+
+## WASM Response Examples
+
+### Successful Execution
+```json
+{
+  "success": true,
+  "result": 30,
+  "error": null,
+  "function": "add",
+  "operands": [10, 20],
+  "owner": "admin"
+}
+```
+
+### Function Not Found Error
+```json
+{
+  "success": false,
+  "result": null,
+  "error": "Function 'invalid_func' not found in WASM module",
+  "function": "invalid_func",
+  "operands": [10, 20],
+  "owner": "admin"
+}
+```
+
+## Tips for WASM Testing
+
+1. **Use the build script**: Run `./math/build.sh` to generate valid WASM bytes
+2. **Test all functions**: Try different mathematical operations
+3. **Check ownership**: Only the creator can execute their functions
+4. **Validate input**: Functions expect `[i32, i32]` arguments
+5. **Test special cases**: Division by zero, negative values, etc. 
