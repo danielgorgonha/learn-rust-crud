@@ -8,6 +8,7 @@ use handlers::create::create_data;
 use handlers::delete::delete_data;
 use handlers::read::{read_all_data, read_data};
 use handlers::update::update_data;
+use handlers::execute::execute_fn;
 use std::env;
 
 #[async_std::main]
@@ -32,6 +33,7 @@ async fn main() -> tide::Result<()> {
     app.at("/data/:id").get(read_data); // Read one
     app.at("/data/:id").put(update_data); // Update
     app.at("/data/:id").delete(delete_data); // Delete
+    app.at("/execute/:id").post(execute_fn); // Executa funções wasm
 
     // Get server address from environment variable or use default
     let addr = env::var("SERVER_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
