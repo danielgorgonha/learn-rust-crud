@@ -143,8 +143,8 @@ pub fn get_authenticated_user(req: &Request<AppState>) -> Result<String, tide::E
 // Function to convert CreateDataRequest to DataEntry
 pub fn create_data_entry_from_request(req_data: CreateDataRequest, owner: String) -> DataEntry {
     DataEntry {
-        data1: req_data.data1,
-        data2: req_data.data2,
+        func_names: req_data.func_names,
+        bytecode: req_data.bytecode,
         owner,
     }
 }
