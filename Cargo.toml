@@ -1,7 +1,7 @@
 [package]
 name = "learn-rust-crud"
 version = "0.4.0"
-edition = "2024"
+edition = "2021"
 description = "CRUD API with WebAssembly integration built with Rust and Tide framework"
 license = "MIT"
 authors = ["Daniel R Gorgonha <danielgorgonha@gmail.com>"]
@@ -19,6 +19,6 @@ tide = "0.16.0"
 jsonwebtoken = "9.3.1"
 chrono = { version = "0.4", features = ["serde"] }
 dotenv = "0.15"
-wasmi = "0.46.0"
+wasmi = "0.48.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
