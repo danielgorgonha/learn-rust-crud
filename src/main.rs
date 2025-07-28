@@ -10,6 +10,10 @@ use handlers::read::{read_all_data, read_data};
 use handlers::update::update_data;
 use handlers::execute::execute_fn;
 use std::env;
+use std::sync::atomic::{AtomicU64, Ordering};
+use tracing::info;
+
+static CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[async_std::main]
 async fn main() -> tide::Result<()> {
@@ -24,6 +28,18 @@ async fn main() -> tide::Result<()> {
 
     // Create the Tide app and associate the state
     let mut app = tide::with_state(state);
+
+    // Adiciona um middleware para logar a rota chamada e o contador
+    app.with(tide::utils::Before(|req: tide::Request<_>| async move {
+        let count = CALL_COUNTER.fetch_add(1, Ordering::SeqCst) + 1;
+        info!(
+            method = %req.method(),
+            path = %req.url().path(),
+            total_calls = %count,
+            "Request received"
+        );
+        req
+    }));
 
     // Define authentication routes
     app.at("/auth/login").post(login);
@@ -40,15 +56,25 @@ async fn main() -> tide::Result<()> {
 
     // Get server address from environment variable or use default
     let addr = env::var("SERVER_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
-    println!("CRUD server with JWT authentication and refresh tokens running at: http://{addr}");
-    println!("Available users:");
-    println!("  - admin/admin123");
-    println!("  - user1/password123");
-    println!("  - user2/password456");
-    println!("Access tokens expire in 1 hour");
-    println!("Refresh tokens expire in 30 days");
+    
+    info!(
+        server_url = format!("http://{}", addr),
+        "CRUD server with JWT authentication and refresh tokens started"
+    );
+    
+    info!("Available users for testing:");
+    info!(username = "admin", password = "admin123");
+    info!(username = "user1", password = "password123");
+    info!(username = "user2", password = "password456");
+    
+    info!(
+        access_token_expiration = "1 hour",
+        refresh_token_expiration = "30 days",
+        "Token configuration"
+    );
 
     // Start the server
+    info!(address = %addr, "Starting server...");
     app.listen(addr).await?;
     Ok(())
 }
