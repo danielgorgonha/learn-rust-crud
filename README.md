@@ -471,11 +471,33 @@ The math library provides these functions:
 - **Real-time Metrics**: WebSocket endpoint for live metrics
 - **Function Composition**: Support for chaining multiple WASM functions
 - **Memory Limits**: WASM memory usage monitoring and limits
+- **Dynamic Function Signatures**: Support for functions with varying parameter counts
+  - *Current: Hardcoded support for (i32, i32) -> i32 and (i32) -> i32*
+  - *Future: Automatic signature detection and validation*
+
+### Advanced WASM Integration (Future)
+- **Custom Attributes**: Rich metadata for WASM functions
+  ```rust
+  #[wasm_function(
+      signature = "(i32, i32, i32) -> i32",
+      description = "Complex calculation",
+      category = "advanced",
+      validation = "no_overflow"
+  )]
+  pub extern "C" fn complex_calc(a: i32, b: i32, c: i32) -> i32 {
+      a * b + c
+  }
+  ```
+- **Function Discovery**: Automatic detection of available functions and signatures
+- **Type Safety**: Compile-time validation of function signatures
+- **Rich Documentation**: Auto-generated API documentation from function metadata
+- **Validation Rules**: Custom validation rules per function (bounds, overflow, etc.)
 
 ### Technical Debt
 - **Timeout Implementation**: Requires framework migration or custom async runtime
 - **Cache Eviction**: Implement proper cache cleanup strategies
 - **Metrics Persistence**: Store metrics in database for historical analysis
+- **Signature Detection**: Replace hardcoded function signatures with dynamic detection
 
 ## 📝 License
 
