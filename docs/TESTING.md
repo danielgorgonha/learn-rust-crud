@@ -66,12 +66,13 @@ cargo test test_generate_access_token
 #### Integration Tests
 ```bash
 # All integration tests
-cargo test --test integration_auth --test integration_crud --test integration_errors -- --nocapture
+cargo test --test integration_auth --test integration_crud --test integration_errors --test integration_execute -- --nocapture
 
 # Specific integration test categories
-cargo test --test integration_auth -- --nocapture  # Authentication tests
-cargo test --test integration_crud -- --nocapture  # CRUD tests
-cargo test --test integration_errors -- --nocapture # Error handling tests
+cargo test --test integration_auth -- --nocapture      # Authentication tests
+cargo test --test integration_crud -- --nocapture      # CRUD tests
+cargo test --test integration_errors -- --nocapture    # Error handling tests
+cargo test --test integration_execute -- --nocapture   # WASM execution tests
 ```
 
 ### Run Tests in Parallel
@@ -120,6 +121,15 @@ cargo test -- --test-threads=4
 ### 3. **Error Handling Tests** (`integration_errors.rs`)
 - **`test_unauthorized_access`**: Tests access rejection without authentication
 - **`test_invalid_token`**: Tests access rejection with invalid JWT token
+
+### 4. **WASM Execution Tests** (`integration_execute.rs`)
+- **`test_wasm_execute_success`**: Tests successful WASM function execution
+- **`test_wasm_execute_multiple_functions`**: Tests execution of different WASM functions
+- **`test_wasm_execute_invalid_function`**: Tests rejection of invalid function names
+- **`test_wasm_execute_unauthorized_access`**: Tests access control for WASM execution
+- **`test_wasm_execute_record_not_found`**: Tests execution with non-existent record
+- **`test_wasm_execute_invalid_json`**: Tests rejection of invalid JSON payload
+- **`test_wasm_execute_missing_authentication`**: Tests authentication requirement
 
 ## 🛠️ Integration Tests Architecture
 
@@ -186,30 +196,31 @@ struct TestData {
 - ✅ **Authentication Flow**: Login, token validation
 - ✅ **CRUD Operations**: Full data lifecycle
 - ✅ **Error Handling**: Invalid requests, unauthorized access
+- ✅ **WASM Execution**: Function execution, validation, security
 - ✅ **Server Management**: Startup, shutdown, health checks
-- ✅ **HTTP Status Codes**: 200, 201, 204, 401, 404
+- ✅ **HTTP Status Codes**: 200, 201, 204, 400, 401, 403, 404
 - ✅ **JWT Integration**: Token generation, validation, expiration
 
 ## 📈 Test Metrics
 
 ### **Current Statistics**
 - **Total Unit Tests**: 21
-- **Total Integration Tests**: 4
-- **Total Tests**: 25
+- **Total Integration Tests**: 11
+- **Total Tests**: 32
 - **Tested Modules**: 3 (auth, models, state)
-- **Coverage**: ~90% of core functionalities
-- **Execution Time**: < 5 seconds
-- **Success Rate**: 100% (25/25 passing)
+- **Coverage**: ~95% of core functionalities
+- **Execution Time**: < 8 seconds
+- **Success Rate**: 100% (32/32 passing)
 
 ### **Breakdown by Type**
-- **Unit Tests**: 21 tests (84%)
-- **Integration Tests**: 4 tests (16%)
+- **Unit Tests**: 21 tests (66%)
+- **Integration Tests**: 11 tests (34%)
 
 ### **Breakdown by Module**
-- **Auth**: 8 tests (32%)
-- **Models**: 7 tests (28%)
-- **State**: 8 tests (32%)
-- **Integration**: 4 tests (16%)
+- **Auth**: 8 tests (25%)
+- **Models**: 7 tests (22%)
+- **State**: 8 tests (25%)
+- **Integration**: 11 tests (34%)
 
 ## 🔧 Test Configuration
 
