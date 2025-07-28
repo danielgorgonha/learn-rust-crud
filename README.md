@@ -127,7 +127,7 @@ cargo test -- --nocapture
 - ✅ **Test Isolation**: Each test runs independently
 - ✅ **Comprehensive Logging**: Detailed test execution logs
 
-For detailed testing documentation, see [tests/README.md](tests/README.md).
+For detailed testing documentation, see [docs/TESTING.md](docs/TESTING.md).
 
 ## 🔐 Authentication
 
@@ -584,8 +584,13 @@ Contributions are welcome! Feel free to:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📚 Learning Resources
+## 📚 Documentation
 
+### Project Documentation
+- [Testing Guide](docs/TESTING.md) - Comprehensive testing documentation (unit + integration tests)
+- [WASM Integration Guide](docs/WASM_GUIDE.md) - WebAssembly integration and usage
+
+### External Resources
 - [Rust Book](https://doc.rust-lang.org/book/)
 - [Tide Documentation](https://docs.rs/tide)
 - [Serde Documentation](https://serde.rs/)
