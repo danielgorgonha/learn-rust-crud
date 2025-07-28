@@ -22,3 +22,6 @@ dotenv = "0.15"
 wasmi = "0.48.0"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+[dev-dependencies]
+ureq = { version = "2.9", features = ["json"] }

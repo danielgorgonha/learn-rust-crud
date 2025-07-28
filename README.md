@@ -32,7 +32,7 @@ This project demonstrates how to implement CRUD operations (Create, Read, Update
 - ✅ **Refresh Tokens**: Automatic token refresh system
 - ✅ **Authorization**: Owner-only access for sensitive operations
 - ✅ **WebAssembly Support**: Execute WASM modules with security
-- ✅ **Tests**: Automated test scripts with authentication
+- ✅ **Tests**: Comprehensive integration tests with authentication
 
 ## 🛠️ Technologies Used
 
@@ -64,6 +64,9 @@ cp env.example .env
 
 # Run the project
 cargo run
+
+# Run tests (optional)
+cargo test -- --nocapture
 ```
 
 The server will be available at: `http://127.0.0.1:8080` (configurable via `SERVER_ADDR` environment variable)
@@ -88,6 +91,43 @@ JWT_ISSUER=my-app
 ACCESS_TOKEN_EXPIRATION_HOURS=2
 REFRESH_TOKEN_EXPIRATION_DAYS=7
 ```
+
+## 🧪 Testing
+
+### Integration Tests
+
+This project includes comprehensive integration tests that demonstrate real-world testing practices in Rust:
+
+- **Authentication Tests**: Login success/failure scenarios
+- **CRUD Operations**: Complete Create, Read, Update, Delete flow
+- **Error Handling**: Unauthorized access and invalid token scenarios
+- **Server Management**: Automatic server startup/shutdown for each test
+
+#### Running Tests
+
+```bash
+# Run all integration tests
+cargo test --test integration_auth --test integration_crud --test integration_errors -- --nocapture
+
+# Run specific test categories
+cargo test --test integration_auth -- --nocapture  # Authentication tests
+cargo test --test integration_crud -- --nocapture  # CRUD tests
+cargo test --test integration_errors -- --nocapture # Error handling tests
+
+# Run all project tests
+cargo test -- --nocapture
+```
+
+#### Test Features
+
+- ✅ **Real Server Testing**: Tests run against actual server instances
+- ✅ **Automatic Port Management**: Finds available ports automatically
+- ✅ **JWT Token Testing**: Full authentication flow validation
+- ✅ **HTTP Status Validation**: Proper error code handling
+- ✅ **Test Isolation**: Each test runs independently
+- ✅ **Comprehensive Logging**: Detailed test execution logs
+
+For detailed testing documentation, see [tests/README.md](tests/README.md).
 
 ## 🔐 Authentication
 
@@ -467,6 +507,10 @@ The math library provides these functions:
 - **WASM Execution Timeout**: Add timeout protection for long-running functions
   - *Note: Currently not implemented due to Tide framework limitations*
   - *Alternative: Consider migration to Tokio-based framework for timeout support*
+- **Framework Migration**: Consider migrating from async-std/Tide to Tokio-based stack
+  - *Benefits: Better ecosystem support, more mature async runtime, enhanced timeout capabilities*
+  - *Potential frameworks: Axum, Warp, or Actix-web with Tokio runtime*
+  - *Migration would enable: WASM execution timeouts, better error handling, improved performance*
 - **Advanced Caching**: LRU cache for frequently used modules
 - **Real-time Metrics**: WebSocket endpoint for live metrics
 - **Function Composition**: Support for chaining multiple WASM functions
@@ -498,6 +542,27 @@ The math library provides these functions:
 - **Cache Eviction**: Implement proper cache cleanup strategies
 - **Metrics Persistence**: Store metrics in database for historical analysis
 - **Signature Detection**: Replace hardcoded function signatures with dynamic detection
+
+### Framework Migration Considerations
+
+The current implementation uses **async-std** and **Tide** framework. For future enhancements, consider migrating to a **Tokio-based stack**:
+
+#### Why Consider Migration?
+- **Better Ecosystem**: Tokio has a larger, more mature ecosystem
+- **Enhanced Features**: Better timeout support, improved error handling
+- **Performance**: More optimized async runtime
+- **Community Support**: Larger community and more resources
+
+#### Potential Migration Paths
+1. **Axum + Tokio**: Modern, type-safe web framework
+2. **Warp + Tokio**: Lightweight, composable web framework  
+3. **Actix-web + Tokio**: High-performance, feature-rich framework
+
+#### Migration Benefits
+- ✅ **WASM Timeouts**: Native support for execution timeouts
+- ✅ **Better Error Handling**: More robust error management
+- ✅ **Enhanced Testing**: Improved testing capabilities with Tokio
+- ✅ **Future-Proof**: Better long-term maintainability
 
 ## 📝 License
 
